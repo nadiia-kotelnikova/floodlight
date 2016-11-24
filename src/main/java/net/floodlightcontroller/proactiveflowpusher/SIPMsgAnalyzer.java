@@ -220,7 +220,7 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 		// Is message Request ...
 		if (parsedSIPMsg instanceof Request){
 			// If message is INVITE
-			if (((Request) parsedSIPMsg).getMethod().equals(Request.INVITE)){
+			if (((Request) parsedSIPMsg).getMethod().equals(Request.INVITE) && parsedSIPMsg.getContentTypeHeader().getContentType().contains("sdp")){
 				if (!extractedData.containsKey(callID)) {
 					mediaField = getField(sdpContent, 'm');
 					connectionField = getField(sdpContent, 'c');
