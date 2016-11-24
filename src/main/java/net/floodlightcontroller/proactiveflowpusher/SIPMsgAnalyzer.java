@@ -41,7 +41,9 @@ import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.packet.UDP;
 import net.floodlightcontroller.routing.IRoutingService;
 import net.floodlightcontroller.routing.Path;
+import gov.nist.javax.sdp.fields.ConnectionField;
 import gov.nist.javax.sdp.fields.MediaField;
+import gov.nist.javax.sdp.parser.ConnectionFieldParser;
 import gov.nist.javax.sdp.parser.MediaFieldParser;
 import gov.nist.javax.sip.message.SIPMessage;
 import gov.nist.javax.sip.parser.StringMsgParser;
@@ -60,6 +62,7 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 	//------------------------------------------------------
 	public StringMsgParser sipMsgParser;
 	public MediaFieldParser mediaParser;
+	public ConnectionFieldParser connectionParser;
 	//------------------------------------------------------
 	/* The HashMap has next structure: <CallID> | [0 = <MediaType>, 1 = <Src Media Port>, 2 = <Src IP Address>, 3 = <Dst Media Port>, 4 = <Dst IP Address>
 	 * 												5 = <Src OFPort>, 6 = Src OFPort, []] */
@@ -205,24 +208,28 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 		ArrayList<String> tempListPath = null;
 		Integer mediaPort = null;
 		MediaField parsedMediaField = null;
+		ConnectionField parsedConnectionField = null;
 		//------------------------------------------------
 		byte[] udpPayload = udpPacket.getPayload().serialize(); // Getting Payload from UDP packet and serializing it
 		SIPMessage parsedSIPMsg = sipParser(udpPayload);		// Getting SIPMessage from UDP Payload
 		String sdpContent = parsedSIPMsg.getMessageContent();	// Getting SDP content from Parsed SIP message
 		String callID = parsedSIPMsg.getCallId().toString();	// Getting CallID from Parsed SIP message
 		String mediaField = null;
+		String connectionField = null;
 		//------------------------------------------------
 		// Is message Request ...
 		if (parsedSIPMsg instanceof Request){
 			// If message is INVITE
 			if (((Request) parsedSIPMsg).getMethod().equals(Request.INVITE)){
 				if (!extractedData.containsKey(callID)) {
-					mediaField = getMediaField(sdpContent);
+					mediaField = getField(sdpContent, 'm');
+					connectionField = getField(sdpContent, 'c');
 					parsedMediaField = mediaParser(mediaField);
+					parsedConnectionField = connectionParser(connectionField);
 					mediaPort = parsedMediaField.getMediaPort();
 					valueList.add(0, parsedMediaField.getMediaType());
 					valueList.add(1, mediaPort.toString());
-					valueList.add(2, urlSplitter(parsedSIPMsg));
+					valueList.add(2, parsedConnectionField.getAddress());
 			    	extractedData.put(callID, valueList);
 			    	logger.info("This is a 'INVITE' message with DialogID: {}", callID);
 			    	//logger.info(extractedData.toString());
@@ -254,11 +261,13 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 			if (statusCode == Response.OK && parsedSIPMsg.hasContent() == true){
 				tempList = extractedData.get(callID);
 				if (extractedData.containsKey(callID) && tempList.size() <= 3){
-					mediaField = getMediaField(sdpContent);
+					mediaField = getField(sdpContent, 'm');
+					connectionField = getField(sdpContent, 'c');
 					parsedMediaField = mediaParser(mediaField);
+					parsedConnectionField = connectionParser(connectionField);
 					mediaPort = parsedMediaField.getMediaPort();
 					tempList.add(3, mediaPort.toString());
-					tempList.add(4, urlSplitter(parsedSIPMsg));
+					tempList.add(4, parsedConnectionField.getAddress());
 					extractedData.put(callID, tempList);
 					logger.info("This is a '200 OK' message with DialogID: {}", callID);
 					//logger.info(extractedData.toString());
@@ -291,9 +300,9 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 	/* Gets Media Field from SDP Content String
 	 * 
 	 */
-	public String getMediaField(String sdpContent){
+	public String getField(String sdpContent, char field){
 		for(String str : sdpContent.split("\n")){
-			if(str.charAt(0) == 'm'){
+			if(str.charAt(0) == field){
 				return str;
 				}
 		}
@@ -367,6 +376,19 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
     		mediaParser = new MediaFieldParser(str);
         	MediaField mediaContent = mediaParser.mediaField();
         	return mediaContent;
+        } catch (ParseException e) {
+			// TODO: handle exception
+        	logger.info("mediaParserException");
+			e.printStackTrace();
+		}
+        return null;
+	}
+	
+	public ConnectionField connectionParser (String str) throws ParseException {
+        try{
+    		connectionParser = new ConnectionFieldParser(str);
+        	ConnectionField connectionContent = connectionParser.connectionField();
+        	return connectionContent;
         } catch (ParseException e) {
 			// TODO: handle exception
         	logger.info("mediaParserException");
