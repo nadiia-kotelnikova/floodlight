@@ -6,9 +6,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFlowAdd;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
 import org.projectfloodlight.openflow.protocol.action.OFActionSetQueue;
@@ -57,15 +59,9 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 	public static final long LEARNING_SWITCH_COOKIE = (long) (LEARNING_SWITCH_APP_ID & ((1 << APP_ID_BITS) - 1)) << APP_ID_SHIFT;
 
 	// more flow-mod defaults
-	protected static short FLOWMOD_DEFAULT_IDLE_TIMEOUT = 5; // in seconds
+	protected static short FLOWMOD_DEFAULT_IDLE_TIMEOUT = 10; // in seconds
 	protected static short FLOWMOD_DEFAULT_HARD_TIMEOUT = 0; // infinite
-	protected static short FLOWMOD_PRIORITY = 101;
-
-	// for managing our map sizes
-	protected static final int MAX_MACS_PER_SWITCH  = 1000;
-
-	// normally, setup reverse flow as well. Disable only for using cbench for comparison with NOX etc.
-	protected static final boolean LEARNING_SWITCH_REVERSE_FLOW = true;
+	protected static short FLOWMOD_PRIORITY = 100;
 	//----------------------------------------------------
 	@Override
 	public void switchAdded(DatapathId switchId) {
@@ -90,11 +86,15 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 			DatapathId nodeID = node.getNodeId();
 			IOFSwitch sw = switchService.getSwitch(nodeID);
 			OFPort nodePort = node.getPortId();
-			logger.info("Switch {} Port {}", nodeID.toString(), nodePort.toString());
-			OFFactory myFactory = sw.getOFFactory(); 	// Use the factory version appropriate for the switch in question. 
+			
+			OFFactory myFactory = OFFactories.getFactory(OFVersion.OF_13);
+			//OFFactory myFactory = sw.getOFFactory(); 	// Use the factory version appropriate for the switch in question. 
 			System.out.println(parameters.toString());
 			if (nodeInd % 2 == 0){
-				if (parameters.get(0) == "audio"){
+				
+				
+				if (parameters.get(0).equals("audio")){
+					logger.info("Flow was pushed to Switch {} Port {}", nodeID.toString(), nodePort.toString());
 					Match forwardMatch = matcher(myFactory, parameters, "forward");
 					OFFlowAdd forwardFlow = flowCreator(5, 5, nodePort, myFactory, forwardMatch);
 					sw.write(forwardFlow);
@@ -105,7 +105,8 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 				}
 			}
 			else{
-				if (parameters.get(0) == "audio"){
+				if (parameters.get(0).equals("audio")){
+					logger.info("Flow was pushed to Switch {} Port {}", nodeID.toString(), nodePort.toString());
 					Match backwardMatch = matcher(myFactory, parameters, "backward");
 					OFFlowAdd backwardFlow = flowCreator(5, 5, nodePort, myFactory, backwardMatch);
 					sw.write(backwardFlow);

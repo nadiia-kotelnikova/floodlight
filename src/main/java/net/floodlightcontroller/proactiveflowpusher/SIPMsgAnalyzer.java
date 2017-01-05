@@ -195,7 +195,6 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener {
 		if (parsedSIPMsg instanceof Request){
 			// If message is INVITE
 			if (((Request) parsedSIPMsg).getMethod().equals(Request.INVITE) && parsedSIPMsg.getContentTypeHeader().getContentType().contains("application")){
-				logger.info("Invite and contains SDP part");
 				if (!extractedData.containsKey(callID)) {
 					mediaField = getField(sdpContent, 'm');
 					connectionField = getField(sdpContent, 'c');

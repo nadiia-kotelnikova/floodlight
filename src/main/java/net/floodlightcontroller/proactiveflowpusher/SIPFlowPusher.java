@@ -56,11 +56,6 @@ public class SIPFlowPusher implements IFloodlightModule, IOFSwitchListener {
 	protected static short FLOWMOD_DEFAULT_HARD_TIMEOUT = 0; // infinite
 	protected static short FLOWMOD_PRIORITY = 101;
 
-	// for managing our map sizes
-	protected static final int MAX_MACS_PER_SWITCH  = 1000;
-
-	// normally, setup reverse flow as well. Disable only for using cbench for comparison with NOX etc.
-	protected static final boolean LEARNING_SWITCH_REVERSE_FLOW = true;
 
 	@Override
 	public void switchAdded(DatapathId switchId) {
