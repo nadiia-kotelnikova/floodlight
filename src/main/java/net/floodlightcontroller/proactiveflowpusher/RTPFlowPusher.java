@@ -83,9 +83,7 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 		// TODO Auto-generated method stub
 	
 	}
-	
 
-	
 	public synchronized void flowPusher(ArrayList<String> parameters, Path shortestPath){
 		Integer nodeInd = 1;
 		for (NodePortTuple node : shortestPath.getPath()){

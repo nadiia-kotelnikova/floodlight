@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.sdp.SdpParseException;
 import javax.sip.message.Request;
@@ -33,7 +32,6 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.core.types.NodePortTuple;
 import net.floodlightcontroller.devicemanager.IDevice;
 import net.floodlightcontroller.devicemanager.IDeviceService;
 import net.floodlightcontroller.devicemanager.SwitchPort;
@@ -111,28 +109,8 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener {
 		                if(udp.getSourcePort().getPort() == 5060 || 
 		                		udp.getDestinationPort().getPort() == 5060){
 		                	try{
-		                		//getPath(sw.getId(), OFPort.of(1), sw.getId(), OFPort.of(3));
 		                		MacAddress mac = eth.getSourceMACAddress();
 		                		dataExtracting(udp, mac);
-		                		logger.info(getExtractedDataTable().toString());
-		                		logger.info(getPathIDTable().toString());
-
-		    					HashMap<String, ArrayList<String>> extrData = getExtractedDataTable();
-		    					HashMap<String, ArrayList<String>> path = getPathIDTable();
-		    					Set <Map.Entry<String, ArrayList<String>>> set = extrData.entrySet();
-		    					Set <Map.Entry<String, ArrayList<String>>> set2 = path.entrySet();
-		    					for(Map.Entry<String, ArrayList<String>> row : set){
-		    						String key = row.getKey();
-		    						//System.out.println(row.getValue().getClass());
-		    						for(Map.Entry<String, ArrayList<String>> row2 : set2){
-		    							if (key == row2.getKey() && row.getValue().size() == 5){
-			    							ArrayList<String> listData = row.getValue();
-			    							ArrayList<String> listPath = row2.getValue();
-			    							logger.info(getPath(listPath).toString());
-			    							rtpFlowPusher.flowPusher(listData, getPath(listPath));
-		    							}
-		    						}
-		    					}
 		    				} catch (Exception e) {
 		    					//e.printStackTrace();
 		    				}
@@ -268,15 +246,17 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener {
 					extractedData.put(callID, tempList);
 					logger.info("This is a '200 OK' message with DialogID: {}", callID);
 					//logger.info(extractedData.toString());
-				}
-				tempListPath = pathID.get(callID);
-				if (pathID.containsKey(callID) && tempListPath.size() <= 2){
-					pathList = getAttachmentPoints(mac);
-					tempListPath.add(2, pathList.get(0));
-					tempListPath.add(3, pathList.get(1));
-					pathID.put(callID, tempListPath);
-					//logger.info(pathID.toString());
-				}
+					
+					tempListPath = pathID.get(callID);
+					if (pathID.containsKey(callID) && tempListPath.size() <= 2){
+						pathList = getAttachmentPoints(mac);
+						tempListPath.add(2, pathList.get(0));
+						tempListPath.add(3, pathList.get(1));
+						pathID.put(callID, tempListPath);
+						//logger.info(pathID.toString());
+					}
+					rtpFlowPusher.flowPusher(tempList, getPath(tempListPath));
+				}		
 			} 
 			// If message has Error code
 			else if (responseClass == 4 || responseClass == 5 || responseClass == 6){
