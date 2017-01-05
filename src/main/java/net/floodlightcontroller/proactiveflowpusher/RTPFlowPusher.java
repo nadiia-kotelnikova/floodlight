@@ -4,7 +4,6 @@ package net.floodlightcontroller.proactiveflowpusher;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.projectfloodlight.openflow.protocol.OFFactory;
@@ -88,10 +87,8 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 
 	
 	public synchronized void flowPusher(ArrayList<String> parameters, Path shortestPath){
-		List<NodePortTuple> path = shortestPath.getPath();
 		Integer nodeInd = 1;
-		
-		for (NodePortTuple node : path){
+		for (NodePortTuple node : shortestPath.getPath()){
 			DatapathId nodeID = node.getNodeId();
 			IOFSwitch sw = switchService.getSwitch(nodeID);
 			OFPort nodePort = node.getPortId();
@@ -121,10 +118,7 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 				}
 			}
 			nodeInd ++;
-			
-			
 			logger.info("RTP flows were pushed");
-			
 		}
 	}
 	

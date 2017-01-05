@@ -177,11 +177,6 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener {
 				OFPort.of(Integer.parseInt(listEndNodes.get(1))), 
 				DatapathId.of(listEndNodes.get(2)), 
 				OFPort.of(Integer.parseInt(listEndNodes.get(3))));
-		for(NodePortTuple node : shortestPath.getPath()){
-			DatapathId nodeID = node.getNodeId();
-			OFPort nodePort = node.getPortId();
-			System.out.println(nodeID.toString() + "	" + nodePort.toString());
-		}
 		return shortestPath;
 	}
 	
