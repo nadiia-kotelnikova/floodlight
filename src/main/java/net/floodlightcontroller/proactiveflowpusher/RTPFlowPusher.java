@@ -89,37 +89,48 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 	
 	public synchronized void flowPusher(ArrayList<String> parameters, Path shortestPath){
 		List<NodePortTuple> path = shortestPath.getPath();
+		Integer nodeInd = 1;
+		
 		for (NodePortTuple node : path){
-			
-			if (){
-				
-			}
-			else if (){
-				
-			}
 			DatapathId nodeID = node.getNodeId();
 			IOFSwitch sw = switchService.getSwitch(nodeID);
 			OFPort nodePort = node.getPortId();
 			logger.info("Switch {} Port {}", nodeID.toString(), nodePort.toString());
 			OFFactory myFactory = sw.getOFFactory(); 	// Use the factory version appropriate for the switch in question. 
 			System.out.println(parameters.toString());
+			if (nodeInd % 2 == 0){
+				if (parameters.get(0) == "audio"){
+					Match forwardMatch = matcher(myFactory, parameters, "forward");
+					OFFlowAdd forwardFlow = flowCreator(5, 5, nodePort, myFactory, forwardMatch);
+					sw.write(forwardFlow);
+					//Match backwardMatch = matcher(myFactory, parameters, "backward");
+					//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
+					//sw.write(backwardFlow);
+				} else if (parameters.get(0) == "video"){
+					Match forwardMatch = matcher(myFactory, parameters, "forward");
+					OFFlowAdd forwardFlow = flowCreator(6, 6, nodePort, myFactory, forwardMatch);
+					sw.write(forwardFlow);
+					//Match backwardMatch = matcher(myFactory, parameters, "backward");
+					//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
+					//sw.write(backwardFlow);
+				}
+			}
+			else{
+				if (parameters.get(0) == "audio"){
+					Match backwardMatch = matcher(myFactory, parameters, "backward");
+					OFFlowAdd backwardFlow = flowCreator(5, 5, nodePort, myFactory, backwardMatch);
+					sw.write(backwardFlow);
+				} else if (parameters.get(0) == "video"){
+					Match backwardMatch = matcher(myFactory, parameters, "backward");
+					OFFlowAdd backwardFlow = flowCreator(5, 5, nodePort, myFactory, backwardMatch);
+					sw.write(backwardFlow);
+				}
+			}
+			nodeInd ++;
+			
 			
 			logger.info("RTP flows were pushed");
-			if (parameters.get(0) == "audio"){
-				Match forwardMatch = matcher(myFactory, parameters, "forward");
-				OFFlowAdd forwardFlow = flowCreator(5, 5, nodePort, myFactory, forwardMatch);
-				sw.write(forwardFlow);
-				//Match backwardMatch = matcher(myFactory, parameters, "backward");
-				//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
-				//sw.write(backwardFlow);
-			} else if (parameters.get(0) == "video"){
-				Match forwardMatch = matcher(myFactory, parameters, "forward");
-				OFFlowAdd forwardFlow = flowCreator(6, 6, nodePort, myFactory, forwardMatch);
-				sw.write(forwardFlow);
-				//Match backwardMatch = matcher(myFactory, parameters, "backward");
-				//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
-				//sw.write(backwardFlow);
-			}
+			
 		}
 	}
 	
