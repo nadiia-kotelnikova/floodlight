@@ -124,7 +124,7 @@ public class SIPFlowPusher implements IFloodlightModule, IOFSwitchListener {
 		
 		sw.write(flowAdd);
 		sw.write(flowAdd2);
-		logger.info("Flows were pushed");
+		logger.info("SIP flows were pushed to the switch.");
 
 	}
  

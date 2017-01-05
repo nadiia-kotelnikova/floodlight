@@ -33,6 +33,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.core.types.NodePortTuple;
 import net.floodlightcontroller.devicemanager.IDevice;
 import net.floodlightcontroller.devicemanager.IDeviceService;
 import net.floodlightcontroller.devicemanager.SwitchPort;
@@ -51,7 +52,7 @@ import gov.nist.javax.sip.parser.StringMsgParser;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 
-public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, ISIPAnalyzer {
+public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener {
 	
 	//------------------------------------------------------
 	protected static Logger logger;
@@ -128,7 +129,7 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 			    							ArrayList<String> listData = row.getValue();
 			    							ArrayList<String> listPath = row2.getValue();
 			    							logger.info(getPath(listPath).toString());
-			    							rtpFlowPusher.flowPucher(listData, getPath(listPath));
+			    							rtpFlowPusher.flowPusher(listData, getPath(listPath));
 		    							}
 		    						}
 		    					}
@@ -147,7 +148,7 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 		return Command.CONTINUE;		
 	}
 	
-	public ArrayList<String> getAttachechmentPoints(MacAddress mac){
+	public ArrayList<String> getAttachmentPoints(MacAddress mac){
 		ArrayList<String> list = new ArrayList<>();
 		IDevice device = deviceService.findDevice(
 				MacAddress.of(mac.getBytes()), 
@@ -171,17 +172,17 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 	}
 	
 	public Path getPath(ArrayList<String> listEndNodes){
-		Path path = routingService.getPath(
+		Path shortestPath = routingService.getPath(
 				DatapathId.of(listEndNodes.get(0)), 
 				OFPort.of(Integer.parseInt(listEndNodes.get(1))), 
 				DatapathId.of(listEndNodes.get(2)), 
 				OFPort.of(Integer.parseInt(listEndNodes.get(3))));
-		/*for(NodePortTuple node : path.getPath()){
+		for(NodePortTuple node : shortestPath.getPath()){
 			DatapathId nodeID = node.getNodeId();
 			OFPort nodePort = node.getPortId();
 			System.out.println(nodeID.toString() + "	" + nodePort.toString());
-		}*/
-		return path;
+		}
+		return shortestPath;
 	}
 	
 	public synchronized HashMap<String, ArrayList<String>> getExtractedDataTable(){
@@ -220,7 +221,8 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 		// Is message Request ...
 		if (parsedSIPMsg instanceof Request){
 			// If message is INVITE
-			if (((Request) parsedSIPMsg).getMethod().equals(Request.INVITE) && parsedSIPMsg.getContentTypeHeader().getContentType().contains("sdp")){
+			if (((Request) parsedSIPMsg).getMethod().equals(Request.INVITE) && parsedSIPMsg.getContentTypeHeader().getContentType().contains("application")){
+				logger.info("Invite and contains SDP part");
 				if (!extractedData.containsKey(callID)) {
 					mediaField = getField(sdpContent, 'm');
 					connectionField = getField(sdpContent, 'c');
@@ -235,7 +237,7 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 			    	//logger.info(extractedData.toString());
 				}
 				if (!pathID.containsKey(callID)){
-            		pathID.put(callID, getAttachechmentPoints(mac));
+            		pathID.put(callID, getAttachmentPoints(mac));
             		//logger.info(pathID.toString());
 				}
 			}
@@ -274,7 +276,7 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 				}
 				tempListPath = pathID.get(callID);
 				if (pathID.containsKey(callID) && tempListPath.size() <= 2){
-					pathList = getAttachechmentPoints(mac);
+					pathList = getAttachmentPoints(mac);
 					tempListPath.add(2, pathList.get(0));
 					tempListPath.add(3, pathList.get(1));
 					pathID.put(callID, tempListPath);
@@ -307,18 +309,6 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 				}
 		}
 		return null;
-	}
-	
-	/* Splits Contact header and returns IP Address
-	 * 
-	 */
-	public String urlSplitter(SIPMessage sipmessage){
-		String urlString = sipmessage.getContactHeader().getAddress().getURI().toString();
-		String[] parts = urlString.split("@");
-		String socketAddress = parts[parts.length-1];
-		parts = socketAddress.split(":");
-		String contactIP = parts[0];
-		return contactIP;
 	}
 	
 	/* This Method is accepts FloodlightContext from PACKET_IN,
@@ -417,7 +407,6 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 	public Collection<Class<? extends IFloodlightService>> getModuleServices() {
 		Collection<Class<? extends IFloodlightService>> l = 
 				new ArrayList<Class<? extends IFloodlightService>>();
-	    l.add(ISIPAnalyzer.class);
 	    return l;
 	}
 	
@@ -426,7 +415,6 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener, IS
 	public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
 		 Map<Class<? extends IFloodlightService>, IFloodlightService> m = 
 				 new HashMap<Class<? extends IFloodlightService>, IFloodlightService>();
-		 m.put(ISIPAnalyzer.class, this);
 		 return m;
 	}
 	

@@ -1,8 +1,10 @@
 package net.floodlightcontroller.proactiveflowpusher;
 
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.projectfloodlight.openflow.protocol.OFFactory;
@@ -45,7 +47,7 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 	protected static Logger logger;
 	protected IFloodlightProviderService floodlightProvider;
 	protected IOFSwitchService switchService;
-	protected ISIPAnalyzer sipAnalyzer;
+
 	//-----------------------------------------------------
 	// flow-mod - for use in the cookie
 	public static final int LEARNING_SWITCH_APP_ID = 1;
@@ -83,46 +85,41 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 	
 	}
 	
-	public synchronized void pusher() throws Exception{
-		try{
-			HashMap<String, ArrayList<String>> extractedData = sipAnalyzer.getExtractedDataTable();
-			HashMap<String, ArrayList<String>> pathID = sipAnalyzer.getPathIDTable();
-			while(true){
-				logger.info(extractedData.toString());
-				logger.info(pathID.toString());
-			}
-		} catch (Exception e) {
-			//e.printStackTrace();
-		}
-		
-	}
+
 	
-	public synchronized void flowPucher(ArrayList<String> parameters, Path path){
-		for (NodePortTuple node : path.getPath()){
+	public synchronized void flowPusher(ArrayList<String> parameters, Path shortestPath){
+		List<NodePortTuple> path = shortestPath.getPath();
+		for (NodePortTuple node : path){
+			
+			if (){
+				
+			}
+			else if (){
+				
+			}
 			DatapathId nodeID = node.getNodeId();
 			IOFSwitch sw = switchService.getSwitch(nodeID);
 			OFPort nodePort = node.getPortId();
 			logger.info("Switch {} Port {}", nodeID.toString(), nodePort.toString());
 			OFFactory myFactory = sw.getOFFactory(); 	// Use the factory version appropriate for the switch in question. 
 			System.out.println(parameters.toString());
-			Match forwardMatch = matcher(myFactory, parameters, "forward");
-			//Match backwardMatch = matcher(myFactory, parameters, "backward");
-			OFFlowAdd forwardFlow = flowCreator(5, 5, nodePort, myFactory, forwardMatch);
-			//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
-			sw.write(forwardFlow);
-			//sw.write(backwardFlow);
-			logger.info("flowPusher: Flows were pushed");
-			/*if (parameters.get(0) == "audio"){
-				OFFlowAdd forwardFlow = flowCreator(5, 5, 3, myFactory, forwardMatch);
-				OFFlowAdd backwardFlow = flowCreator(5, 5, 1, myFactory, backwardMatch);
-
-			} else if (parameters.get(0) == "video"){
-				OFFlowAdd forwardFlow = flowCreator(6, 6, 1, myFactory, forwardMatch);
-				OFFlowAdd backwardFlow = flowCreator(6, 6, 2, myFactory, backwardMatch);
-			}*/
 			
-		/*	sw.write(forwardFlow);
-			sw.write(backwardFlow);*/
+			logger.info("RTP flows were pushed");
+			if (parameters.get(0) == "audio"){
+				Match forwardMatch = matcher(myFactory, parameters, "forward");
+				OFFlowAdd forwardFlow = flowCreator(5, 5, nodePort, myFactory, forwardMatch);
+				sw.write(forwardFlow);
+				//Match backwardMatch = matcher(myFactory, parameters, "backward");
+				//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
+				//sw.write(backwardFlow);
+			} else if (parameters.get(0) == "video"){
+				Match forwardMatch = matcher(myFactory, parameters, "forward");
+				OFFlowAdd forwardFlow = flowCreator(6, 6, nodePort, myFactory, forwardMatch);
+				sw.write(forwardFlow);
+				//Match backwardMatch = matcher(myFactory, parameters, "backward");
+				//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
+				//sw.write(backwardFlow);
+			}
 		}
 	}
 	
