@@ -103,16 +103,10 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 					Match forwardMatch = matcher(myFactory, parameters, "forward");
 					OFFlowAdd forwardFlow = flowCreator(5, 5, nodePort, myFactory, forwardMatch);
 					sw.write(forwardFlow);
-					//Match backwardMatch = matcher(myFactory, parameters, "backward");
-					//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
-					//sw.write(backwardFlow);
 				} else if (parameters.get(0) == "video"){
 					Match forwardMatch = matcher(myFactory, parameters, "forward");
 					OFFlowAdd forwardFlow = flowCreator(6, 6, nodePort, myFactory, forwardMatch);
 					sw.write(forwardFlow);
-					//Match backwardMatch = matcher(myFactory, parameters, "backward");
-					//OFFlowAdd backwardFlow = flowCreator(5, 5, srcOFPort, myFactory, backwardMatch);
-					//sw.write(backwardFlow);
 				}
 			}
 			else{
@@ -122,7 +116,7 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 					sw.write(backwardFlow);
 				} else if (parameters.get(0) == "video"){
 					Match backwardMatch = matcher(myFactory, parameters, "backward");
-					OFFlowAdd backwardFlow = flowCreator(5, 5, nodePort, myFactory, backwardMatch);
+					OFFlowAdd backwardFlow = flowCreator(6, 6, nodePort, myFactory, backwardMatch);
 					sw.write(backwardFlow);
 				}
 			}
