@@ -56,6 +56,7 @@ import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.util.OFMessageUtils;
 
+import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFFlowRemoved;
 import org.projectfloodlight.openflow.protocol.match.Match;
@@ -68,6 +69,8 @@ import org.projectfloodlight.openflow.protocol.OFPacketOut;
 import org.projectfloodlight.openflow.protocol.OFType;
 import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
+import org.projectfloodlight.openflow.protocol.instruction.OFInstructionApplyActions;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
@@ -246,10 +249,13 @@ implements IFloodlightModule, ILearningSwitchService, IOFMessageListener, IContr
 		//    };
 
 		OFFlowMod.Builder fmb;
+		OFFactory factory;
 		if (command == OFFlowModCommand.DELETE) {
 			fmb = sw.getOFFactory().buildFlowDelete();
+			factory = sw.getOFFactory();
 		} else {
 			fmb = sw.getOFFactory().buildFlowAdd();
+			factory = sw.getOFFactory();
 		}
 		fmb.setMatch(match);
 		fmb.setCookie((U64.of(LearningSwitch.LEARNING_SWITCH_COOKIE)));
@@ -275,8 +281,15 @@ implements IFloodlightModule, ILearningSwitchService, IOFMessageListener, IContr
 		// and port, max_len are arguments to this constructor
 		List<OFAction> al = new ArrayList<OFAction>();
 		al.add(sw.getOFFactory().actions().buildOutput().setPort(outPort).setMaxLen(0xffFFffFF).build());
-		fmb.setActions(al);
-
+		//fmb.setActions(al);
+		//--------------------
+		ArrayList<OFInstruction> instructionsList = new ArrayList<OFInstruction>();
+		OFInstructionApplyActions applyActions = factory.instructions().buildApplyActions()
+				.setActions(al)
+				.build();
+		instructionsList.add(applyActions);
+		fmb.setInstructions(instructionsList);
+		//-------------------
 		if (log.isTraceEnabled()) {
 			log.trace("{} {} flow mod {}",
 					new Object[]{ sw, (command == OFFlowModCommand.DELETE) ? "deleting" : "adding", fmb.build() });
