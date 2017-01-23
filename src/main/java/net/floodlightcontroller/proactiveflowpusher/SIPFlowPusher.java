@@ -43,15 +43,9 @@ public class SIPFlowPusher implements IFloodlightModule, IOFSwitchListener {
 	protected IFloodlightProviderService floodlightProvider;
 	protected IOFSwitchService switchService;
 	
-	// flow-mod - for use in the cookie
-	public static final int LEARNING_SWITCH_APP_ID = 1;
-	// LOOK! This should probably go in some class that encapsulates
-	// the app cookie management
-	public static final int APP_ID_BITS = 12;
-	public static final int APP_ID_SHIFT = (64 - APP_ID_BITS);
-	public static final long LEARNING_SWITCH_COOKIE = (long) (LEARNING_SWITCH_APP_ID & ((1 << APP_ID_BITS) - 1)) << APP_ID_SHIFT;
 
 	// more flow-mod defaults
+	public static final long SIP_FLOW_PUSHER_COOKIE = 0x5555;
 	protected static short FLOWMOD_DEFAULT_IDLE_TIMEOUT = 0; // in seconds
 	protected static short FLOWMOD_DEFAULT_HARD_TIMEOUT = 0; // infinite
 	protected static short FLOWMOD_PRIORITY = 101;
@@ -105,7 +99,7 @@ public class SIPFlowPusher implements IFloodlightModule, IOFSwitchListener {
 		/*Creating FlowMod*/
 		OFFlowAdd flowAdd = myFactory.buildFlowAdd()
 				.setMatch(udpDstMatch)
-				.setCookie((U64.of(SIPFlowPusher.LEARNING_SWITCH_COOKIE)))
+				.setCookie((U64.of(SIPFlowPusher.SIP_FLOW_PUSHER_COOKIE)))
 				.setIdleTimeout(SIPFlowPusher.FLOWMOD_DEFAULT_IDLE_TIMEOUT)
 				.setHardTimeout(SIPFlowPusher.FLOWMOD_DEFAULT_HARD_TIMEOUT)
 				.setPriority(SIPFlowPusher.FLOWMOD_PRIORITY)

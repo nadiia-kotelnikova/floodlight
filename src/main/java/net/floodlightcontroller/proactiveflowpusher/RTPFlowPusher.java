@@ -50,18 +50,11 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 	protected IOFSwitchService switchService;
 
 	//-----------------------------------------------------
-	// flow-mod - for use in the cookie
-	public static final int LEARNING_SWITCH_APP_ID = 1;
-	// LOOK! This should probably go in some class that encapsulates
-	// the app cookie management
-	public static final int APP_ID_BITS = 12;
-	public static final int APP_ID_SHIFT = (64 - APP_ID_BITS);
-	public static final long LEARNING_SWITCH_COOKIE = (long) (LEARNING_SWITCH_APP_ID & ((1 << APP_ID_BITS) - 1)) << APP_ID_SHIFT;
-
 	// more flow-mod defaults
+	public static final long RTP_FLOW_PUSHER_COOKIE = 0x7777;
 	protected static short FLOWMOD_DEFAULT_IDLE_TIMEOUT = 10; // in seconds
 	protected static short FLOWMOD_DEFAULT_HARD_TIMEOUT = 0; // infinite
-	protected static short FLOWMOD_PRIORITY = 100;
+	protected static short FLOWMOD_PRIORITY = 101;
 	//----------------------------------------------------
 	@Override
 	public void switchAdded(DatapathId switchId) {
@@ -96,7 +89,7 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 				if (parameters.get(0).equals("audio")){
 					logger.info("Flow was pushed to Switch {} Port {}", nodeID.toString(), nodePort.toString());
 					Match forwardMatch = matcher(myFactory, parameters, "forward");
-					OFFlowAdd forwardFlow = flowCreator(5, 5, nodePort, myFactory, forwardMatch);
+					OFFlowAdd forwardFlow = flowCreator(0, 4, nodePort, myFactory, forwardMatch);
 					sw.write(forwardFlow);
 				} else if (parameters.get(0) == "video"){
 					Match forwardMatch = matcher(myFactory, parameters, "forward");
@@ -108,7 +101,7 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 				if (parameters.get(0).equals("audio")){
 					logger.info("Flow was pushed to Switch {} Port {}", nodeID.toString(), nodePort.toString());
 					Match backwardMatch = matcher(myFactory, parameters, "backward");
-					OFFlowAdd backwardFlow = flowCreator(5, 5, nodePort, myFactory, backwardMatch);
+					OFFlowAdd backwardFlow = flowCreator(0, 4, nodePort, myFactory, backwardMatch);
 					sw.write(backwardFlow);
 				} else if (parameters.get(0) == "video"){
 					Match backwardMatch = matcher(myFactory, parameters, "backward");
@@ -183,7 +176,7 @@ public class RTPFlowPusher implements IFloodlightModule, IOFSwitchListener, IRTP
 
 		OFFlowAdd flow = factory.buildFlowAdd()
 				.setMatch(match)
-				.setCookie((U64.of(RTPFlowPusher.LEARNING_SWITCH_COOKIE)))
+				.setCookie((U64.of(RTPFlowPusher.RTP_FLOW_PUSHER_COOKIE)))
 				.setIdleTimeout(RTPFlowPusher.FLOWMOD_DEFAULT_IDLE_TIMEOUT)
 				.setHardTimeout(RTPFlowPusher.FLOWMOD_DEFAULT_HARD_TIMEOUT)
 				.setPriority(RTPFlowPusher.FLOWMOD_PRIORITY)

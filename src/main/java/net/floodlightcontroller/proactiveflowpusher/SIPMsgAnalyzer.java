@@ -18,7 +18,6 @@ import org.projectfloodlight.openflow.types.IPv6Address;
 import org.projectfloodlight.openflow.types.IpProtocol;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFPort;
-import org.projectfloodlight.openflow.types.TransportPort;
 import org.projectfloodlight.openflow.types.VlanVid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -284,53 +283,7 @@ public class SIPMsgAnalyzer implements IFloodlightModule, IOFMessageListener {
 		}
 		return null;
 	}
-	
-	/* This Method is accepts FloodlightContext from PACKET_IN,
-	 * filters only packets IPv4 && UDP && Port 5060,
-	 * and returns UDP Packet
-	 */
-	public UDP UDPPacket(Ethernet eth){
-        /* Check the ethertype of the Ethernet frame and retrieve the appropriate payload.
-         * Note the shallow equality check. EthType caches and reuses instances for valid types.*/
-        if (eth.getEtherType() == EthType.IPv4) {
-            /* We got an IPv4 packet; get the payload from Ethernet */
-            IPv4 ipv4 = (IPv4) eth.getPayload();
-            eth.getSourceMACAddress();
-            if (ipv4.getProtocol() == IpProtocol.UDP) {
-                /* We got a UDP packet; get the payload from IPv4 */
-                UDP udp = (UDP) ipv4.getPayload();
-  
-                /* Various getters and setters are exposed in UDP */
-                TransportPort srcPort = udp.getSourcePort();
-                TransportPort dstPort = udp.getDestinationPort();
-                 
-                if(srcPort.getPort() == 5060 || dstPort.getPort() == 5060){
-                	return udp;
-                }
-            } else if (ipv4.getProtocol() == IpProtocol.TCP) {
-                return null;
-            }  
-        }
-        return null;
-	}
-	
-	
-	/* This Method accepts parsed SIPMessage 
-	 * analyzing INVITE or 200 OK
-	 * returning String with type of message
-	 */
-	public String msgAnalyzer(SIPMessage sm) {
-		String msgType = null;
-		if(sm instanceof Request && ((Request) sm).getMethod().equals(Request.INVITE)){
-			msgType = "INVITE";
-        } else if (sm instanceof Response && ((Response) sm).getStatusCode() == Response.OK && sm.hasContent() == true) {
-        	msgType = "OK";
-        } else if (sm instanceof Request && ((Request) sm).getMethod().equals(Request.BYE)) {
-        	msgType = "BYE";
-        }
-        return msgType;
-	} 
-	
+
 	
 	/* Parser for Media Description field in SDN content.
 	 * Accepting string with "m=..." attribute and parsering it
