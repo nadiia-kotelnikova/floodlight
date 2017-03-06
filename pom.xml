@@ -165,6 +165,12 @@
 			<artifactId>org.restlet.ext.jackson</artifactId>
 			<version>${lib-restlet-version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/javax.sip/jain-sip-ri -->
+		<dependency>
+    			<groupId>javax.sip</groupId>
+    			<artifactId>jain-sip-ri</artifactId>
+    			<version>1.2.243</version>
+		</dependency>
 		<dependency>
 			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet.ext.simple</artifactId>
